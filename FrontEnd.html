@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <style>
+        /* Default Theme Variables */
+        :root {
+            --background: linear-gradient(to right, #ff7e5f, #feb47b); /* Default gradient */
+            --text-color: #ffffff;
+            --card-bg: #ffffff;
+            --card-text: #333333;
+            --input-bg: #f9f9f9;
+            --button-bg: linear-gradient(to right, #ff7e5f, #ff4e50);
+            --button-hover-bg: linear-gradient(to right, #ff4e50, #ff7e5f);
+            --status-success: limegreen;
+            --status-error: red;
+        }
+
+        /* Lighter Dark Theme Variables */
+        body.dark-mode {
+            --background: #2e2e2e; /* Softer dark background */
+            --text-color: #e0e0e0; /* Light gray text */
+            --card-bg: #3c3c3c; /* Lighter dark card background */
+            --card-text: #ffffff; /* White card text */
+            --input-bg: #4a4a4a; /* Softer dark input field */
+            --button-bg: #ff4e50; /* Solid button for dark mode */
+            --button-hover-bg: #ff7e5f; /* Hovered button for dark mode */
+            --status-success: limegreen;
+            --status-error: #ff4e50;
+        }
+
+        /* General Styling */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: var(--background);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            color: var(--text-color);
+            transition: background 0.5s, color 0.5s;
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        header p {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+
+        /* Form Section */
+        form {
+            background: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            padding: 25px 35px;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            margin: 0 auto;
+            transition: background 0.5s, color 0.5s;
+        }
+
+        .url-input-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .url-input-wrapper img {
+            width: 30px;
+            height: auto;
+            margin-right: 10px;
+        }
+
+        .url-input-wrapper input[type="text"] {
+            width: calc(100% - 120px); /* Adjust width to leave space for the button */
+            padding: 12px;
+            margin-right: 10px;
+            border: 2px solid var(--button-bg);
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            color: var(--card-text);
+            transition: background 0.5s, color 0.5s, border 0.5s;
+        }
+
+        .url-input-wrapper input[type="text"]:focus {
+            border-color: var(--button-bg);
+            outline: none;
+        }
+
+        button {
+            background: var(--button-bg);
+            color: #ffffff;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+            width: 100px; /* Fixed width for the button */
+        }
+
+        button:hover {
+            background: var(--button-hover-bg);
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--card-bg);
+            color: var(--card-text);
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transition: background 0.5s, color 0.5s;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>YouTube Video Downloader</h1>
+        <p>Your one-stop solution to download your favorite videos with ease.</p>
+    </header>
+
+    <div class="content">
+        <form id="downloadForm">
+            <div class="url-input-wrapper">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="YouTube Icon">
+                <input type="text" id="link" name="link" placeholder="e.g., https://www.youtube.com/watch?v=..." required>
+                <button type="submit">Download</button>
+            </div>
+        </form>
+        <p id="statusMessage"></p>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle">🌙 Dark Mode</button>
+
+    <footer>
+        <p>Made with ❤️ for easy video downloads. <a href="#">Learn More</a></p>
+    </footer>
+
+    <script>
+        document.getElementById('downloadForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const response = await fetch('http://localhost:8000/download', {
+                method: 'POST',
+                body: formData
+            });
+
+            const statusMessage = document.getElementById('statusMessage');
+            if (response.ok) {
+                const result = await response.json();
+                statusMessage.textContent = 'Download started: ' + result.status;
+                statusMessage.style.color = 'var(--status-success)';
+            } else {
+                statusMessage.textContent = 'Error: ' + response.statusText;
+                statusMessage.style.color = 'var(--status-error)';
+            }
+        });
+
+        // Theme Toggle Logic
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            if (document.body.classList.contains('dark-mode')) {
+                themeToggle.textContent = '☀️ Light Mode';
+            } else {
+                themeToggle.textContent = '🌙 Dark Mode';
+            }
+        });
+    </script>
+</body>
+</html>
